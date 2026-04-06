@@ -27,6 +27,7 @@ else:
                 st.error("❌ Invalid image")
             else:
                 # SAME preprocessing as training
+                
                 img = cv2.resize(img, (64, 64))
                 img = cv2.Canny(img, 100, 200)
 
