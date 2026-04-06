@@ -5,18 +5,18 @@ import joblib
 import os
 from PIL import Image
 
+st.set_page_config(page_title="Blood Group Detection", layout="centered")
+
 st.title("🧬 Blood Group Detection using Fingerprint")
 
-# ✅ Safe model loading
 MODEL_PATH = "model.pkl"
 
 if not os.path.exists(MODEL_PATH):
-    st.error("❌ model.pkl file not found! Please upload it to GitHub.")
+    st.error("❌ model.pkl not found. Run train.py first.")
 else:
     model = joblib.load(MODEL_PATH)
 
-    # File upload
-    file = st.file_uploader("Upload Fingerprint Image", type=["jpg", "png", "jpeg", "bmp"])
+    file = st.file_uploader("Upload Fingerprint Image", type=["jpg","png","jpeg","bmp"])
 
     if file is not None:
         try:
@@ -24,18 +24,23 @@ else:
             img = np.array(image)
 
             if img is None or img.size == 0:
-                st.error("❌ Image not loaded properly")
+                st.error("❌ Invalid image")
             else:
-                # ⚠️ IMPORTANT: match training size
-                img = cv2.resize(img, (32, 32))   # or 128x128 based on your training
-                img = cv2.GaussianBlur(img, (5,5), 0)
+                # SAME preprocessing as training
+                img = cv2.resize(img, (64, 64))
+                img = cv2.Canny(img, 100, 200)
 
                 features = img.flatten().reshape(1, -1)
+                features = features / 255.0
 
                 result = model.predict(features)
 
+                probs = model.predict_proba(features)
+                confidence = np.max(probs) * 100
+
                 st.image(file, caption="Uploaded Fingerprint", use_column_width=True)
                 st.success(f"✅ Predicted Blood Group: {result[0]}")
+                st.info(f"📊 Confidence: {confidence:.2f}%")
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
